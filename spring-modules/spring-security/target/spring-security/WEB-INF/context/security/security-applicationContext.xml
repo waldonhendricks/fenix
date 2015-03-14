@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<b:beans xmlns:b="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns="http://www.springframework.org/schema/security"
+	xmlns:oauth="http://www.springframework.org/schema/security/oauth"
+	xsi:schemaLocation="http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security-3.2.xsd 
+		http://www.springframework.org/schema/security/oauth 
+		http://www.springframework.org/schema/security/spring-security-oauth.xsd 
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+	<!-- Global Security Settings -->
+	<global-method-security pre-post-annotations="enabled" />
+
+	<!-- Form and Security Access Configuration -->
+	<http use-expressions="true" 
+		access-denied-page="/403"
+		disable-url-rewriting="true">
+
+		<session-management invalid-session-url="/login?time=1">
+			<concurrency-control max-sessions="1" expired-url="/login?time=1" />
+		</session-management>
+
+		<form-login login-page="/login" 
+			default-target-url="/" 
+			always-use-default-target="true"
+			authentication-failure-url="/login?err=1" 
+			username-parameter="username"
+			password-parameter="password" />
+
+		<logout logout-success-url="/login?out=1"
+			delete-cookies="JSESSIONID" 
+			invalidate-session="true" />
+
+		<intercept-url requires-channel="http" 
+			pattern="/login*"
+			access="permitAll()" />
+		<intercept-url requires-channel="http" 
+			pattern="/**"
+			access="hasRole('ROLE_USER')" />
+	</http>
+
+	<b:bean id="customUserDetailsService" class="com.uk.security.CustomUserDetailsService" />
+
+	<!-- Authentication Providers for Form Login -->
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider user-service-ref="customUserDetailsService">
+	    	<password-encoder ref="encoder" />
+		</authentication-provider>
+	</authentication-manager>
+
+	<b:bean id="encoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder">
+		<b:constructor-arg name="strength" value="10" />
+  	</b:bean>
+
+</b:beans>
